@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ObjectPrinting.Tests
+namespace ObjectPrinting
 {
     public static class ObjectExtensions
     {
