@@ -16,21 +16,20 @@ namespace ObjectPrinting
 
         public PrintingConfig<TOwner> SetAlternativeSerialize(Func<TPropType, string> serializeFunc)
         {
-            foreach (var propertyInfo in typeof(TOwner).GetProperties()
-                .Where(prop => prop.PropertyType == typeof(TPropType)))
-                UpdatePrintingConfigSerializers(serializeFunc, propertyInfo.Name);
-            return PrintingConfig;
+            return typeof(TOwner).GetProperties()
+                .Where(prop => prop.PropertyType == typeof(TPropType))
+                .Aggregate(PrintingConfig, (current, propertyInfo) =>
+                    UpdatePrintingConfigSerializers(current, serializeFunc, propertyInfo.Name));
         }
 
-        public PrintingConfig<TOwner> SetSerializeForProperty(Func<TPropType, string> serializeFunc)
-        {
-            UpdatePrintingConfigSerializers(serializeFunc, PropertyName);
-            return PrintingConfig;
-        }
+        public PrintingConfig<TOwner> SetSerializeForProperty(Func<TPropType, string> serializeFunc) => 
+            UpdatePrintingConfigSerializers(PrintingConfig, serializeFunc, PropertyName);
 
-        private void UpdatePrintingConfigSerializers(Func<TPropType, string> serializeFunc, string propertyName) => 
-            (PrintingConfig as IPrintingConfig)
-            .Serializers[propertyName] = ChangeFuncSignature(serializeFunc);
+        private PrintingConfig<TOwner> UpdatePrintingConfigSerializers(PrintingConfig<TOwner> config,
+            Func<TPropType, string> serializeFunc, 
+            string propertyName) => 
+            config
+            .UpdateSerializers(propertyName, ChangeFuncSignature(serializeFunc));
 
         private static Func<object, string> ChangeFuncSignature(Func<TPropType, string> f) => 
             obj => f((TPropType)obj);
