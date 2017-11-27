@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -16,39 +17,43 @@ namespace ObjectPrinting.Tests
         }
 
         [Test]
-        public void SetAlternativeSerialize_AddFuncToPrintingConfig()
+        public void SetAlternativeSerialize_ChangeAllOfThisTypePropertySerializaion()
         {
             var printingConfig = new PrintingConfig<TestClass>();
-            var propConfig = new PropertyConfig<TestClass, string>(printingConfig, null);
-            Func<string, string> f = str => "topTest";
+            var propConfig = new PropertyConfig<TestClass, int>(printingConfig, null);
+            Func<int, string> f = str => "topTest";
             propConfig
                 .SetAlternativeSerialize(f)
                 .PrintToString(testClass)
-                .Contains("topTest")
-                .Should().BeTrue();
+                .Replace("topTest", "#")
+                .Count(c => c == '#')
+                .Should().Be(2);
         }
 
         [Test]
-        public void SetSerializeForProperty_AddFuncToPrintingConfig()
+        public void SetSerializeForProperty_ChangeThisPropertySerializaion()
         {
             var printingConfig = new PrintingConfig<TestClass>();
             var propInfo = typeof(TestClass).GetProperty("String");
-            var propConfig = new PropertyConfig<TestClass, int>(printingConfig, propInfo.Name);
-            Func<int, string> f = str => "topTest";
+            var propConfig = new PropertyConfig<TestClass, string>(printingConfig, propInfo.Name);
+            Func<string, string> f = str => "topTest";
             propConfig.SetSerializeForProperty(f)
                 .PrintToString()
                 .Contains("String")
                 .Should().BeFalse();
         }
 
-//        [Test]
-//        public void SetCultureInfo_UpdatingCultureInfoInPrintingConfig()
-//        {
-//            var printingConfig = new PrintingConfig<Person>();
-//            var propConfig = new PropertyConfig<Person, long>(printingConfig, null);
-//            propConfig.SetCultureInfo(CultureInfo.CurrentCulture);
-//            printingConfig
-//                .CultureInfoForNumbers[typeof(long)].Should().Be(CultureInfo.CurrentCulture);
-//        }
+        [Test]
+        public void TestCutProperties()
+        {
+            var printingConfig = new PrintingConfig<TestClass>();
+            var propInfo = typeof(TestClass).GetProperty("String");
+            var propConfig = new PropertyConfig<TestClass, string>(printingConfig, propInfo.Name);
+            propConfig.CutProperties(4)
+                .PrintToString(testClass)
+                .Contains("there")
+                .Should().BeFalse();
+        }
+
     }
 }

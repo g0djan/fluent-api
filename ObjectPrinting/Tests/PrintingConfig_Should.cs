@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace ObjectPrinting.Tests
@@ -14,14 +15,16 @@ namespace ObjectPrinting.Tests
             testClass = new TestClass();
         }
 
-
         [Test]
-        public void ExcludePropertiesOfType_AddTypeOfExcludingPropertyToHashSet()
+        public void ExcludePropertiesOfType_ExcludeAllPropertiesOfThisType()
         {
             var printingConfig = new PrintingConfig<TestClass>();
-            printingConfig.ExcludePropertiesOfType<int>()
-                .PrintToString(testClass)
-                .Contains("Integer")
+            var strPresentation = printingConfig.ExcludePropertiesOfType<int>()
+                .PrintToString(testClass);
+            typeof(TestClass)
+                .GetProperties()
+                .Where(prop => prop.PropertyType == typeof(int))
+                .Any(prop => strPresentation.Contains(prop.Name))
                 .Should().BeFalse();
         }
 
@@ -48,7 +51,7 @@ namespace ObjectPrinting.Tests
             var printingConfig = new PrintingConfig<Person>();
             printingConfig.Printing(person => person.Id)
                 .PropertyName
-                .Should().Be(typeof(Person).GetProperty("Id")?.Name);
+                .Should().Be("Id");
         }
     }
 }

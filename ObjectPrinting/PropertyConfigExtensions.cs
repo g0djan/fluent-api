@@ -19,14 +19,11 @@ namespace ObjectPrinting
 
         private static PrintingConfig<TOwner> SetCulture<TOwner, TPropType>(
             PropertyConfig<TOwner, TPropType> propertyConfig, 
-            CultureInfo cultureInfo)
-        {
-            return (propertyConfig as IPropertyConfig<TOwner>)
-                .ParentPrintingConfig.GetUpdated(cultureInfo: Tuple.Create(typeof(TPropType), cultureInfo));
-        }
+            CultureInfo cultureInfo) => 
+            propertyConfig.GetCopyParentConfig().GetWithUpdatedCultureInfo(typeof(TPropType), cultureInfo);
 
         public static PrintingConfig<TOwner> CutProperties<TOwner>(
             this PropertyConfig<TOwner, string> propertyConfig, int maxLen) => 
-            (propertyConfig as IPropertyConfig<TOwner>).ParentPrintingConfig.GetUpdated(stringMaxLength:maxLen);
+            propertyConfig.GetCopyParentConfig().GetWithUpdatedStringMaxLength(maxLen);
     }
 }

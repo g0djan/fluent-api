@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ObjectPrinting
 {
-    public class PropertyConfig<TOwner, TPropType> : IPropertyConfig<TOwner>
+    public class PropertyConfig<TOwner, TPropType>
     {
         private PrintingConfig<TOwner> PrintingConfig { get; }
         public string PropertyName { get; }
@@ -25,22 +25,14 @@ namespace ObjectPrinting
         public PrintingConfig<TOwner> SetSerializeForProperty(Func<TPropType, string> serializeFunc) => 
             UpdatePrintingConfigSerializers(PrintingConfig, serializeFunc, PropertyName);
 
-        private PrintingConfig<TOwner> UpdatePrintingConfigSerializers(PrintingConfig<TOwner> config,
+        private static PrintingConfig<TOwner> UpdatePrintingConfigSerializers(PrintingConfig<TOwner> config,
             Func<TPropType, string> serializeFunc, 
-            string propertyName)
-        {
-            return config
-                .GetUpdated(serializer : Tuple.Create(propertyName, ChangeFuncSignature(serializeFunc)));
-        }
+            string propertyName) => 
+            config.GetWithUpdatedSerializers(propertyName, ChangeFuncSignature(serializeFunc));
 
         private static Func<object, string> ChangeFuncSignature(Func<TPropType, string> f) => 
             obj => f((TPropType)obj);
 
-        PrintingConfig<TOwner> IPropertyConfig<TOwner>.ParentPrintingConfig => PrintingConfig;
-    }
-
-    interface IPropertyConfig<TOwner>
-    {
-        PrintingConfig<TOwner> ParentPrintingConfig { get; }
+        public PrintingConfig<TOwner> GetCopyParentConfig() => PrintingConfig.CloneCurrentConfig();
     }
 }

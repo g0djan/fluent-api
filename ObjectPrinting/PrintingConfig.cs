@@ -15,11 +15,11 @@ namespace ObjectPrinting
             typeof(DateTime), typeof(TimeSpan)
         };
 
-        private ImmutableHashSet<Type> ExcludedPropertiesTypes { get; }
-        private ImmutableDictionary<Type, CultureInfo> CultureInfoForNumbers { get; }
-        private ImmutableDictionary<string, Func<object, string>> Serializers { get; }
-        private ImmutableHashSet<string> ExcludedProperties { get; }
-        private int StringMaxLength { get; }
+        private ImmutableHashSet<Type> ExcludedPropertiesTypes { get; set; }
+        private ImmutableDictionary<Type, CultureInfo> CultureInfoForNumbers { get; set; }
+        private ImmutableDictionary<string, Func<object, string>> Serializers { get; set; }
+        private ImmutableHashSet<string> ExcludedProperties { get; set; }
+        private int StringMaxLength { get; set; }
 
         public PrintingConfig()
         {
@@ -30,23 +30,8 @@ namespace ObjectPrinting
             StringMaxLength = MaxValue;
         }
 
-        public PrintingConfig(ImmutableHashSet<Type> excludedPropertiesTypes,
-            ImmutableDictionary<Type, CultureInfo> cultureInfoForNumbers,
-            ImmutableDictionary<string, Func<object, string>> serializers,
-            ImmutableHashSet<string> excludedProperties,
-            int stringMaxLength)
-        {
-            ExcludedPropertiesTypes = excludedPropertiesTypes;
-            CultureInfoForNumbers = cultureInfoForNumbers;
-            Serializers = serializers;
-            ExcludedProperties = excludedProperties;
-            StringMaxLength = stringMaxLength;
-        }
-
-        public string PrintToString(TOwner obj)
-        {
-            return PrintToString(obj, 0);
-        }
+        public string PrintToString(TOwner obj) => 
+            PrintToString(obj, 0);
 
         private string PrintToString(object obj, int nestingLevel)
         {
@@ -57,15 +42,18 @@ namespace ObjectPrinting
             if (FinalTypes.Contains(type))
                 return PrintFinalType(obj, type);
 
-            var identation = "\n" + new string('\t', nestingLevel + 1);
+            var identation = GetIdentation(nestingLevel);
             return type.Name + 
                  type.GetProperties()
                 .Where(propertyInfo => !ExcludedProperties.Contains(propertyInfo.Name) && 
-                                       !ExcludedPropertiesTypes.Contains(type))
+                                       !ExcludedPropertiesTypes.Contains(propertyInfo.PropertyType))
                 .Select(propertyInfo => SerializeProperty(obj, nestingLevel, propertyInfo, identation))
                 .Concat(new[] {""})
                 .Aggregate((sentence, next) => sentence + next);
         }
+
+        private static string GetIdentation(int nestingLevel) => 
+            "\n" + new string('\t', nestingLevel + 1);
 
         private string PrintFinalType(object obj, Type type)
         {
@@ -74,21 +62,27 @@ namespace ObjectPrinting
             return type == typeof(string) ? CutStringPresentation(obj.ToString()) : obj.ToString();
         }
 
-        private string SerializeProperty(object obj, int nestingLevel, PropertyInfo propertyInfo, string identation) => 
+        private string SerializeProperty(
+            object obj, 
+            int nestingLevel, 
+            PropertyInfo propertyInfo, 
+            string identation) => 
             Serializers.ContainsKey(propertyInfo.Name)
             ? identation + Serializers[propertyInfo.Name](propertyInfo.GetValue(obj))
             : StandardPropertySerialization(obj, nestingLevel, identation, propertyInfo);
 
-        private string StandardPropertySerialization(object obj, int nestingLevel, string identation, PropertyInfo propertyInfo) => 
-            string.Join("", identation, propertyInfo.Name, " = ",
-            PrintToString(propertyInfo.GetValue(obj),
-                nestingLevel + 1));
+        private string StandardPropertySerialization(
+            object obj, 
+            int nestingLevel, 
+            string identation, 
+            PropertyInfo propertyInfo) =>
+            $"{identation}{propertyInfo.Name} = {PrintToString(propertyInfo.GetValue(obj), nestingLevel + 1)}";
 
         private string CutStringPresentation(string str) => 
             str.Substring(0, Math.Min(str.Length, StringMaxLength));
 
         public PrintingConfig<TOwner> ExcludePropertiesOfType<TPropType>() => 
-            GetUpdated(ExcludedPropertiesTypes.Add(typeof(TPropType)));
+            GetWithUpdatedExcludedPropertiesTypes(ExcludedPropertiesTypes.Add(typeof(TPropType)));
 
         public PropertyConfig<TOwner, TPropType> Printing<TPropType>() => 
             new PropertyConfig<TOwner, TPropType>(this, null);
@@ -97,25 +91,58 @@ namespace ObjectPrinting
             new PropertyConfig<TOwner, TPropType>(this, FetchPropertyNameFromExpression(selector));
 
         public PrintingConfig<TOwner> ExcludeProperty<TPropType>(Expression<Func<TOwner, TPropType>> selector) => 
-            GetUpdated(excludedProperties:
+            GetWithUpdatedExcludedProperties(
             ExcludedProperties.Add(FetchPropertyNameFromExpression(selector)));
 
         private string FetchPropertyNameFromExpression<TPropType>(
             Expression<Func<TOwner, TPropType>> selector) => ((MemberExpression) selector.Body).Member.Name;
 
-        public PrintingConfig<TOwner> GetUpdated(
-            ImmutableHashSet<Type> excludedPropertiesTypes = null,
-            Tuple<Type, CultureInfo> cultureInfo = null,
-            Tuple<string, Func<object, string>> serializer = null,
-            ImmutableHashSet<string> excludedProperties = null,
-            int? stringMaxLength = null)
+
+        public PrintingConfig<TOwner> CloneCurrentConfig()
         {
-            return new PrintingConfig<TOwner>(
-                excludedPropertiesTypes ?? ExcludedPropertiesTypes,
-                cultureInfo != null ? CultureInfoForNumbers.SetItem(cultureInfo.Item1, cultureInfo.Item2) : CultureInfoForNumbers,
-                serializer != null ? Serializers.SetItem(serializer.Item1, serializer.Item2) : Serializers,
-                excludedProperties ?? ExcludedProperties,
-                stringMaxLength ?? StringMaxLength);
+            return (PrintingConfig<TOwner>)MemberwiseClone();
+        }
+
+        public PrintingConfig<TOwner> GetWithUpdatedExcludedPropertiesTypes(
+            ImmutableHashSet<Type> excludedPropertiesTypes)
+        {
+            var config = CloneCurrentConfig();
+            config.ExcludedPropertiesTypes = excludedPropertiesTypes;
+            return config;
+        }
+
+        public PrintingConfig<TOwner> GetWithUpdatedCultureInfo(
+            Type type, CultureInfo cultureInfo)
+        {
+            if (type != typeof(int) && type != typeof(double) && type != typeof(long))
+                throw new ArgumentException("Culture info only for numbers think about it");
+            var config = CloneCurrentConfig();
+            config.CultureInfoForNumbers = CultureInfoForNumbers.SetItem(type, cultureInfo);
+            return config;
+        }
+
+        public PrintingConfig<TOwner> GetWithUpdatedSerializers(
+            string propertyName, Func<object, string> serializer)
+        {
+            var config = CloneCurrentConfig();
+            config.Serializers = Serializers.SetItem(propertyName, serializer);
+            return config;
+        }
+
+        public PrintingConfig<TOwner> GetWithUpdatedExcludedProperties(
+            ImmutableHashSet<string> excludedProperties)
+        {
+            var config = CloneCurrentConfig();
+            config.ExcludedProperties = excludedProperties;
+            return config;
+        }
+
+        public PrintingConfig<TOwner> GetWithUpdatedStringMaxLength(
+            int maxLength)
+        {
+            var config = CloneCurrentConfig();
+            config.StringMaxLength = maxLength;
+            return config;
         }
     }
 }
