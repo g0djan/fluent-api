@@ -55,7 +55,7 @@ namespace ObjectPrinting
 
             var type = obj.GetType();
             if (FinalTypes.Contains(type))
-                return type == typeof(string) ? CutStringPresentation(obj.ToString()) : obj.ToString();
+                return PrintFinalType(obj, type);
 
             var identation = "\n" + new string('\t', nestingLevel + 1);
             return type.Name + 
@@ -65,6 +65,13 @@ namespace ObjectPrinting
                 .Select(propertyInfo => SerializeProperty(obj, nestingLevel, propertyInfo, identation))
                 .Concat(new[] {""})
                 .Aggregate((sentence, next) => sentence + next);
+        }
+
+        private string PrintFinalType(object obj, Type type)
+        {
+            if (CultureInfoForNumbers.ContainsKey(type))
+                return string.Format(CultureInfoForNumbers[type], "{0}", obj);
+            return type == typeof(string) ? CutStringPresentation(obj.ToString()) : obj.ToString();
         }
 
         private string SerializeProperty(object obj, int nestingLevel, PropertyInfo propertyInfo, string identation) => 

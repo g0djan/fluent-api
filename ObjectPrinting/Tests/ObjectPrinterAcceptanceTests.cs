@@ -10,7 +10,7 @@ namespace ObjectPrinting.Tests
 		[Test]
 		public void Demo()
 		{
-			var person = new Person { Name = "Alex", Age = 19 };
+			var person = new Person { Name = "Alex", Age = 19, Height = 176.1};
 
 		    var printer = ObjectPrinter.For<Person>()
 		        //1. Исключить из сериализации свойства определенного типа
@@ -18,7 +18,7 @@ namespace ObjectPrinting.Tests
 		        //2. Указать альтернативный способ сериализации для определенного типа
 		        .Printing<string>().SetAlternativeSerialize(obj => "obj")
 		        //3. Для числовых типов указать культуру
-		        .Printing<int>().SetCultureInfo(CultureInfo.CurrentCulture)
+		        .Printing<double>().SetCultureInfo(CultureInfo.CurrentCulture)
 		        //4. Настроить сериализацию конкретного свойства
 		        .Printing(pers => pers.Age).SetSerializeForProperty(property => "property")
 		        //5. Настроить обрезание строковых свойств (метод должен быть виден только для строковых свойств)
