@@ -27,9 +27,11 @@ namespace ObjectPrinting
 
         private PrintingConfig<TOwner> UpdatePrintingConfigSerializers(PrintingConfig<TOwner> config,
             Func<TPropType, string> serializeFunc, 
-            string propertyName) => 
-            config
-            .UpdateSerializers(propertyName, ChangeFuncSignature(serializeFunc));
+            string propertyName)
+        {
+            return config
+                .GetUpdated(serializer : Tuple.Create(propertyName, ChangeFuncSignature(serializeFunc)));
+        }
 
         private static Func<object, string> ChangeFuncSignature(Func<TPropType, string> f) => 
             obj => f((TPropType)obj);

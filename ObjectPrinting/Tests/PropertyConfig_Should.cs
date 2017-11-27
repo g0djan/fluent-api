@@ -1,37 +1,47 @@
-//using System;
-//using System.Globalization;
-//using FluentAssertions;
-//using NUnit.Framework;
-//
-//namespace ObjectPrinting.Tests
-//{
-//    [TestFixture]
-//    public class PropertyConfig_Should
-//    {
-//        [Test]
-//        public void SetAlternativeSerialize_AddFuncToPrintingConfig()
-//        {
-//            var printingConfig = new PrintingConfig<Person>();
-//            var propConfig = new PropertyConfig<Person, string>(printingConfig, null);
-//            Func<string, string> f = str => "";
-//            propConfig.SetAlternativeSerialize(f);
-//            foreach (var propertyInfo in typeof(string).GetProperties())
-//                printingConfig
-//                    .Serializers.ContainsKey(propertyInfo.Name).Should().BeTrue();
-//        }
-//
-//        [Test]
-//        public void SetSerializeForProperty_AddFuncToPrintingConfig()
-//        {
-//            var printingConfig = new PrintingConfig<Person>();
-//            var propInfo = typeof(Person).GetProperty("Age");
-//            var propConfig = new PropertyConfig<Person, int>(printingConfig, propInfo.Name);
-//            Func<int, string> f = str => "";
-//            propConfig.SetSerializeForProperty(f);
-//            printingConfig
-//                .Serializers.ContainsKey(propInfo.Name).Should().BeTrue();
-//        }
-//
+using System;
+using System.Globalization;
+using FluentAssertions;
+using NUnit.Framework;
+
+namespace ObjectPrinting.Tests
+{
+    [TestFixture]
+    public class PropertyConfig_Should
+    {
+        private TestClass testClass;
+
+        [SetUp]
+        public void SetUp()
+        {
+            testClass = new TestClass();
+        }
+
+        [Test]
+        public void SetAlternativeSerialize_AddFuncToPrintingConfig()
+        {
+            var printingConfig = new PrintingConfig<TestClass>();
+            var propConfig = new PropertyConfig<TestClass, string>(printingConfig, null);
+            Func<string, string> f = str => "topTest";
+            propConfig
+                .SetAlternativeSerialize(f)
+                .PrintToString(testClass)
+                .Contains("topTest")
+                .Should().BeTrue();
+        }
+
+        [Test]
+        public void SetSerializeForProperty_AddFuncToPrintingConfig()
+        {
+            var printingConfig = new PrintingConfig<TestClass>();
+            var propInfo = typeof(TestClass).GetProperty("String");
+            var propConfig = new PropertyConfig<TestClass, int>(printingConfig, propInfo.Name);
+            Func<int, string> f = str => "topTest";
+            propConfig.SetSerializeForProperty(f)
+                .PrintToString()
+                .Contains("String")
+                .Should().BeFalse();
+        }
+
 //        [Test]
 //        public void SetCultureInfo_UpdatingCultureInfoInPrintingConfig()
 //        {
@@ -41,5 +51,5 @@
 //            printingConfig
 //                .CultureInfoForNumbers[typeof(long)].Should().Be(CultureInfo.CurrentCulture);
 //        }
-//    }
-//}
+    }
+}

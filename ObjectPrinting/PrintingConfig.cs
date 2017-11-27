@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
@@ -15,8 +14,6 @@ namespace ObjectPrinting
             typeof(int), typeof(double), typeof(float), typeof(string),
             typeof(DateTime), typeof(TimeSpan)
         };
-
-
 
         private ImmutableHashSet<Type> ExcludedPropertiesTypes { get; }
         private ImmutableDictionary<Type, CultureInfo> CultureInfoForNumbers { get; }
@@ -83,74 +80,35 @@ namespace ObjectPrinting
         private string CutStringPresentation(string str) => 
             str.Substring(0, Math.Min(str.Length, StringMaxLength));
 
-        public PrintingConfig<TOwner> ExcludePropertiesOfType<TPropType>()
+        public PrintingConfig<TOwner> ExcludePropertiesOfType<TPropType>() => 
+            GetUpdated(ExcludedPropertiesTypes.Add(typeof(TPropType)));
+
+        public PropertyConfig<TOwner, TPropType> Printing<TPropType>() => 
+            new PropertyConfig<TOwner, TPropType>(this, null);
+
+        public PropertyConfig<TOwner, TPropType> Printing<TPropType>(Expression<Func<TOwner, TPropType>> selector) => 
+            new PropertyConfig<TOwner, TPropType>(this, FetchPropertyNameFromExpression(selector));
+
+        public PrintingConfig<TOwner> ExcludeProperty<TPropType>(Expression<Func<TOwner, TPropType>> selector) => 
+            GetUpdated(excludedProperties:
+            ExcludedProperties.Add(FetchPropertyNameFromExpression(selector)));
+
+        private string FetchPropertyNameFromExpression<TPropType>(
+            Expression<Func<TOwner, TPropType>> selector) => ((MemberExpression) selector.Body).Member.Name;
+
+        public PrintingConfig<TOwner> GetUpdated(
+            ImmutableHashSet<Type> excludedPropertiesTypes = null,
+            Tuple<Type, CultureInfo> cultureInfo = null,
+            Tuple<string, Func<object, string>> serializer = null,
+            ImmutableHashSet<string> excludedProperties = null,
+            int? stringMaxLength = null)
         {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes.Add(typeof(TPropType)),
-                CultureInfoForNumbers,
-                Serializers,
-                ExcludedProperties,
-                StringMaxLength);
+            return new PrintingConfig<TOwner>(
+                excludedPropertiesTypes ?? ExcludedPropertiesTypes,
+                cultureInfo != null ? CultureInfoForNumbers.SetItem(cultureInfo.Item1, cultureInfo.Item2) : CultureInfoForNumbers,
+                serializer != null ? Serializers.SetItem(serializer.Item1, serializer.Item2) : Serializers,
+                excludedProperties ?? ExcludedProperties,
+                stringMaxLength ?? StringMaxLength);
         }
-
-        public PropertyConfig<TOwner, TPropType> Printing<TPropType>()
-        {
-            return new PropertyConfig<TOwner, TPropType>(this, null);
-        }
-
-        public PropertyConfig<TOwner, TPropType> Printing<TPropType>(Expression<Func<TOwner, TPropType>> selector)
-        {
-            return new PropertyConfig<TOwner, TPropType>(this, FetchPropertyInfoFromExpression(selector).Name);
-        }
-
-        public PrintingConfig<TOwner> ExcludeProperty<TPropType>(Expression<Func<TOwner, TPropType>> selector)
-        {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes,
-                CultureInfoForNumbers,
-                Serializers,
-                ExcludedProperties.Add(FetchPropertyInfoFromExpression(selector).Name),
-                StringMaxLength);
-        }
-
-        //public PrintingConfig<TOwner> UpdateCultureInfo<In>(CultureInfo cultureInfo)
-
-        public PrintingConfig<TOwner> UpdateCultureInfo(Type type, CultureInfo cultureInfo)
-        {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes,
-                CultureInfoForNumbers.SetItem(type, cultureInfo),
-                Serializers,
-                ExcludedProperties,
-                StringMaxLength);
-        }
-
-        public PrintingConfig<TOwner> UpdateSerializers(string propertyName, Func<object, string> serializer)
-        {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes,
-                CultureInfoForNumbers,
-                Serializers.SetItem(propertyName, serializer),
-                ExcludedProperties, 
-                StringMaxLength);
-        }
-
-        public PrintingConfig<TOwner> UpdateExcludedProperties(string propertyName)
-        {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes,
-                CultureInfoForNumbers,
-                Serializers,
-                ExcludedProperties.Add(propertyName),
-                StringMaxLength);
-        }
-
-        public PrintingConfig<TOwner> UpdateStringMaxLength(int maxLength)
-        {
-            return new PrintingConfig<TOwner>(ExcludedPropertiesTypes,
-                CultureInfoForNumbers,
-                Serializers,
-                ExcludedProperties,
-                maxLength);
-        }
-
-
-        private PropertyInfo FetchPropertyInfoFromExpression<TPropType>(Expression<Func<TOwner, TPropType>> selector) =>
-            ((MemberExpression) selector.Body).Member as PropertyInfo;
     }
 }

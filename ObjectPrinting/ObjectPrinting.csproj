@@ -62,6 +62,7 @@
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Tests\ObjectPrinterAcceptanceTests.cs" />
     <Compile Include="Person.cs" />
+    <Compile Include="Tests\TestClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
