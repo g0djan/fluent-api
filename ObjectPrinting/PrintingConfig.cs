@@ -82,7 +82,7 @@ namespace ObjectPrinting
             str.Substring(0, Math.Min(str.Length, StringMaxLength));
 
         public PrintingConfig<TOwner> ExcludePropertiesOfType<TPropType>() => 
-            GetWithUpdatedExcludedPropertiesTypes(ExcludedPropertiesTypes.Add(typeof(TPropType)));
+            UpdateExcludedPropertiesTypes(ExcludedPropertiesTypes.Add(typeof(TPropType)));
 
         public PropertyConfig<TOwner, TPropType> Printing<TPropType>() => 
             new PropertyConfig<TOwner, TPropType>(this, null);
@@ -91,7 +91,7 @@ namespace ObjectPrinting
             new PropertyConfig<TOwner, TPropType>(this, FetchPropertyNameFromExpression(selector));
 
         public PrintingConfig<TOwner> ExcludeProperty<TPropType>(Expression<Func<TOwner, TPropType>> selector) => 
-            GetWithUpdatedExcludedProperties(
+            UpdateExcludedProperties(
             ExcludedProperties.Add(FetchPropertyNameFromExpression(selector)));
 
         private string FetchPropertyNameFromExpression<TPropType>(
@@ -103,7 +103,7 @@ namespace ObjectPrinting
             return (PrintingConfig<TOwner>)MemberwiseClone();
         }
 
-        public PrintingConfig<TOwner> GetWithUpdatedExcludedPropertiesTypes(
+        public PrintingConfig<TOwner> UpdateExcludedPropertiesTypes(
             ImmutableHashSet<Type> excludedPropertiesTypes)
         {
             var config = CloneCurrentConfig();
@@ -111,7 +111,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> GetWithUpdatedCultureInfo(
+        public PrintingConfig<TOwner> UpdateCultureInfo(
             Type type, CultureInfo cultureInfo)
         {
             if (type != typeof(int) && type != typeof(double) && type != typeof(long))
@@ -121,7 +121,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> GetWithUpdatedSerializers(
+        public PrintingConfig<TOwner> UpdateSerializers(
             string propertyName, Func<object, string> serializer)
         {
             var config = CloneCurrentConfig();
@@ -129,7 +129,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> GetWithUpdatedExcludedProperties(
+        public PrintingConfig<TOwner> UpdateExcludedProperties(
             ImmutableHashSet<string> excludedProperties)
         {
             var config = CloneCurrentConfig();
@@ -137,7 +137,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> GetWithUpdatedStringMaxLength(
+        public PrintingConfig<TOwner> UpdateStringMaxLength(
             int maxLength)
         {
             var config = CloneCurrentConfig();
