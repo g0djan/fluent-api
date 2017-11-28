@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 
 namespace ObjectPrinting
@@ -14,13 +15,11 @@ namespace ObjectPrinting
             PropertyName = propertyName;
         }
 
-        public PrintingConfig<TOwner> SetSerializeForType(Func<TPropType, string> serializeFunc)
-        {
-            return typeof(TOwner).GetProperties()
-                .Where(prop => prop.PropertyType == typeof(TPropType))
-                .Aggregate(PrintingConfig, (current, propertyInfo) =>
-                    UpdatePrintingConfigSerializers(current, serializeFunc, propertyInfo.Name));
-        }
+        public PrintingConfig<TOwner> SetSerializeForType(Func<TPropType, string> serializeFunc) => 
+            typeof(TOwner).GetProperties()
+            .Where(prop => prop.PropertyType == typeof(TPropType))
+            .Aggregate(PrintingConfig, (current, propertyInfo) =>
+                UpdatePrintingConfigSerializers(current, serializeFunc, propertyInfo.Name));
 
         public PrintingConfig<TOwner> SetSerializeForProperty(Func<TPropType, string> serializeFunc) => 
             UpdatePrintingConfigSerializers(PrintingConfig, serializeFunc, PropertyName);
@@ -33,6 +32,12 @@ namespace ObjectPrinting
         private static Func<object, string> ChangeFuncSignature(Func<TPropType, string> f) => 
             obj => f((TPropType)obj);
 
-        public PrintingConfig<TOwner> GetCopyParentConfig() => PrintingConfig.CloneCurrentConfig();
+
+        internal PrintingConfig<TOwner> SetCulture(CultureInfo cultureInfo) =>
+            PrintingConfig.UpdateCultureInfo(typeof(TPropType), cultureInfo);
+
+
+        internal PrintingConfig<TOwner> SetCutProperty(int maxLen) =>
+            PrintingConfig.UpdateStringMaxLength(maxLen);
     }
 }

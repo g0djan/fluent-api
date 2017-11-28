@@ -15,7 +15,6 @@ namespace ObjectPrinting.Tests
             testClass = new TestClass();
         }
 
-
         [Test]
         public void Demo()
         {

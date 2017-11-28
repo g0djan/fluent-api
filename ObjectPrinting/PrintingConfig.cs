@@ -103,7 +103,7 @@ namespace ObjectPrinting
             return (PrintingConfig<TOwner>)MemberwiseClone();
         }
 
-        public PrintingConfig<TOwner> UpdateExcludedPropertiesTypes(
+        internal PrintingConfig<TOwner> UpdateExcludedPropertiesTypes(
             ImmutableHashSet<Type> excludedPropertiesTypes)
         {
             var config = CloneCurrentConfig();
@@ -111,17 +111,15 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> UpdateCultureInfo(
+        internal PrintingConfig<TOwner> UpdateCultureInfo(
             Type type, CultureInfo cultureInfo)
         {
-            if (type != typeof(int) && type != typeof(double) && type != typeof(long))
-                throw new ArgumentException("Culture info only for numbers think about it");
             var config = CloneCurrentConfig();
             config.CultureInfoForNumbers = CultureInfoForNumbers.SetItem(type, cultureInfo);
             return config;
         }
 
-        public PrintingConfig<TOwner> UpdateSerializers(
+        internal PrintingConfig<TOwner> UpdateSerializers(
             string propertyName, Func<object, string> serializer)
         {
             var config = CloneCurrentConfig();
@@ -129,7 +127,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> UpdateExcludedProperties(
+        internal PrintingConfig<TOwner> UpdateExcludedProperties(
             ImmutableHashSet<string> excludedProperties)
         {
             var config = CloneCurrentConfig();
@@ -137,7 +135,7 @@ namespace ObjectPrinting
             return config;
         }
 
-        public PrintingConfig<TOwner> UpdateStringMaxLength(
+        internal PrintingConfig<TOwner> UpdateStringMaxLength(
             int maxLength)
         {
             var config = CloneCurrentConfig();
