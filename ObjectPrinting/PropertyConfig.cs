@@ -14,7 +14,7 @@ namespace ObjectPrinting
             PropertyName = propertyName;
         }
 
-        public PrintingConfig<TOwner> SetAlternativeSerialize(Func<TPropType, string> serializeFunc)
+        public PrintingConfig<TOwner> SetSerializeForType(Func<TPropType, string> serializeFunc)
         {
             return typeof(TOwner).GetProperties()
                 .Where(prop => prop.PropertyType == typeof(TPropType))

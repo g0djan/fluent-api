@@ -23,7 +23,7 @@ namespace ObjectPrinting.Tests
             var propConfig = new PropertyConfig<TestClass, int>(printingConfig, null);
             Func<int, string> f = str => "topTest";
             propConfig
-                .SetAlternativeSerialize(f)
+                .SetSerializeForType(f)
                 .PrintToString(testClass)
                 .Replace("topTest", "#")
                 .Count(c => c == '#')

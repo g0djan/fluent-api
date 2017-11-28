@@ -15,7 +15,7 @@ namespace ObjectPrinting
             typeof(DateTime), typeof(TimeSpan)
         };
 
-        private ImmutableHashSet<Type> ExcludedPropertiesTypes { get; set; }
+        private ImmutableHashSet<Type> ExcludePropertiesTypes { get; set; }
         private ImmutableDictionary<Type, CultureInfo> CultureInfoForNumbers { get; set; }
         private ImmutableDictionary<string, Func<object, string>> Serializers { get; set; }
         private ImmutableHashSet<string> ExcludedProperties { get; set; }
@@ -23,7 +23,7 @@ namespace ObjectPrinting
 
         public PrintingConfig()
         {
-            ExcludedPropertiesTypes = ImmutableHashSet.Create<Type>();
+            ExcludePropertiesTypes = ImmutableHashSet.Create<Type>();
             CultureInfoForNumbers = ImmutableDictionary.Create<Type, CultureInfo>();
             Serializers = ImmutableDictionary.Create<string, Func<object, string>>();
             ExcludedProperties = ImmutableHashSet.Create<string>();
@@ -46,7 +46,7 @@ namespace ObjectPrinting
             return type.Name + 
                  type.GetProperties()
                 .Where(propertyInfo => !ExcludedProperties.Contains(propertyInfo.Name) && 
-                                       !ExcludedPropertiesTypes.Contains(propertyInfo.PropertyType))
+                                       !ExcludePropertiesTypes.Contains(propertyInfo.PropertyType))
                 .Select(propertyInfo => SerializeProperty(obj, nestingLevel, propertyInfo, identation))
                 .Concat(new[] {""})
                 .Aggregate((sentence, next) => sentence + next);
@@ -82,7 +82,7 @@ namespace ObjectPrinting
             str.Substring(0, Math.Min(str.Length, StringMaxLength));
 
         public PrintingConfig<TOwner> ExcludePropertiesOfType<TPropType>() => 
-            UpdateExcludedPropertiesTypes(ExcludedPropertiesTypes.Add(typeof(TPropType)));
+            UpdateExcludedPropertiesTypes(ExcludePropertiesTypes.Add(typeof(TPropType)));
 
         public PropertyConfig<TOwner, TPropType> Printing<TPropType>() => 
             new PropertyConfig<TOwner, TPropType>(this, null);
@@ -107,7 +107,7 @@ namespace ObjectPrinting
             ImmutableHashSet<Type> excludedPropertiesTypes)
         {
             var config = CloneCurrentConfig();
-            config.ExcludedPropertiesTypes = excludedPropertiesTypes;
+            config.ExcludePropertiesTypes = excludedPropertiesTypes;
             return config;
         }
 

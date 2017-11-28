@@ -25,7 +25,7 @@ namespace ObjectPrinting.Tests
                 //1. Исключить из сериализации свойства определенного типа
                 .ExcludePropertiesOfType<Guid>()
                 //2. Указать альтернативный способ сериализации для определенного типа
-                .Printing<string>().SetAlternativeSerialize(obj => "obj")
+                .Printing<string>().SetSerializeForType(obj => "obj")
                 //3. Для числовых типов указать культуру
                 .Printing<double>().SetCultureInfo(CultureInfo.CurrentCulture)
                 //4. Настроить сериализацию конкретного свойства
@@ -69,7 +69,7 @@ namespace ObjectPrinting.Tests
         {
             var printer = ObjectPrinter.For<TestClass>().
                 Printing<int>().
-                SetAlternativeSerialize(prop => "kek");
+                SetSerializeForType(prop => "kek");
             Console.WriteLine(printer.PrintToString(testClass));
         }
 
